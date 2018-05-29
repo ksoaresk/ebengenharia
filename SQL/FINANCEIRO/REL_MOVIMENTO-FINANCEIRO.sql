@@ -17,7 +17,7 @@ BEGIN
 									contratos c
 								WHERE 
 									c.cod_empresa = @cod_empresa
-									AND c.nro_interno IN( 3 )
+									AND c.nro_interno IN( 0, 1, 2, 3, 4, 5, 6 )
 								ORDER BY c.nro_interno
 	
 	OPEN C_PIVOT 
@@ -44,7 +44,7 @@ BEGIN
 				  + ' 	UPPER( am.tipo ) = '+ CHAR(39)+'NF'+CHAR(39)
 				  + ' 	AND mc.cod_empresa = '+ CAST(@cod_empresa AS VARCHAR(5))
 				  + ' 	AND mc.nro_interno = '+ CAST(@nro_interno AS VARCHAR(5))
-				  + ' 	AND MONTH( am.data_emissao_nf ) = rs.mes'
+				  + ' 	AND MONTH( am.data_emissao_nf ) = rs.mes_'
 				  + ' 	AND YEAR( am.data_emissao_nf ) = rs.ano'
 				  + ' GROUP BY '
 				  + ' 	mc.nro_interno,'
@@ -60,11 +60,12 @@ BEGIN
 
 	SET @STR = ' SELECT '
 				+' rs.ano, '
-				+'rs.MES   '
+				+'rs.MES   '+@STR
 				+' FROM '
 				+' ( '
 				+' 	SELECT DISTINCT '
-				+'   		YEAR(am2.data_emissao_nf) AS ano,'
+				+'   		YEAR(am2.data_emissao_nf) AS ano, '
+				+'   		MONTH(am2.data_emissao_nf) AS mes_, '
 				+'			CASE MONTH(am2.data_emissao_nf) '
 				+'          WHEN 1 THEN '+CHAR(39)+'JANEIRO'+CHAR(39)
 				+'          WHEN 2 THEN '+CHAR(39)+'FEVEREIRO'+CHAR(39)
@@ -80,30 +81,17 @@ BEGIN
 				+'          WHEN 12 THEN '+CHAR(39)+'DEZEMBRO'+CHAR(39)
 				+'	  	   END AS MES'
 				+'		FROM '
-				+'     		medicao_contrato mc	'
-				+' 		INNER JOIN anexos_medicao am2 '
+				+'     	medicao_contrato mc	'
+				+' 	INNER JOIN anexos_medicao am2 '
 				+'			ON mc.cod_interno = am2.cod_interno	'
-				+'		WHERE '  				
+				+'		WHERE '
 				+'			UPPER( am2.tipo ) ='+ CHAR(39) +'NF'+ CHAR(39)
-				+' 			AND mc.cod_empresa = '+CAST(@cod_empresa AS VARCHAR(5))
-				+' ) AS rs'
-				+'ORDER BY	'
-				+' rs.ano,'
-				+' rs.mes'				 
+				+' 		AND mc.cod_empresa = '+CAST(@cod_empresa AS VARCHAR(5))
+				+' ) AS rs '
+				+' ORDER BY '
+				+'  rs.ano, '
+				+'  rs.mes_  '			
 
 	EXEC( @STR )
 
 END
-
-SELECT
-	YEAR(am.data_emissao_nf) AS ano,
-	MONTH(am.data_emissao_nf) AS mes
-FROM 
-	medicao_contrato mc 	
-INNER JOIN anexos_medicao am 
-	ON mc.cod_interno = am.cod_interno
-WHERE  
-	1 = 1
-	AND UPPER( am.tipo ) = 'NF'
-	AND mc.cod_empresa = 5
-	AND mc.nro_interno = 3	
