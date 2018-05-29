@@ -29,13 +29,15 @@ BEGIN
 		SET @STR = @STR
 				  + CHAR(44) + CHAR(39) + @nome_contrato + CHAR(39)
 				  + ' = (SELECT'
-				  + ' 		((SUM(am.vlr_nf) * 100) / (SELECT TOP 1 '
+			     + ' 		((SUM(am.vlr_nf) / 100) * (SELECT TOP 1 '
 				  + ' 												percentual '
 				  + ' 											FROM '
 				  + ' 												impostos_contrato ic '
 				  + ' 											WHERE '
-				  + ' 												ic.nro_interno = mc.nro_interno'
-				  + ' 										   	AND ic.cod_empresa = mc.cod_empresa)) AS vlr_nf'
+				  + ' 												ic.nro_interno = mc.nro_interno '
+				  + ' 										   	AND ic.cod_empresa = mc.cod_empresa '
+				  + '													AND LOWER( ic.descricao ) LIKE '+CHAR(39)+'%fundo%'+CHAR(39)+') '
+				  +'													) AS vlr_nf '
 				  + ' FROM '
 				  + ' 	medicao_contrato mc 	'
 				  + ' INNER JOIN anexos_medicao am '
@@ -59,7 +61,7 @@ BEGIN
 	DEALLOCATE C_PIVOT;	
 
 	SET @STR = ' SELECT '
-				+' rs.ano, '
+				+' rs.ano AS ANO, '
 				+'rs.MES   '+@STR
 				+' FROM '
 				+' ( '
